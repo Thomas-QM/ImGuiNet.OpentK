@@ -60,19 +60,17 @@ namespace ImGuiOpenTK{
             ImGui.NewFrame();
         }
 
-        public unsafe static void Render(Point size) {
+        public unsafe static void Render(Point size, Action clear) {
             ImGui.Render();
             if (ImGuiNative.igGetIO()->RenderDrawListsFn == IntPtr.Zero)
-                RenderDrawData(ImGuiNative.igGetDrawData(), size.X, size.Y);
+                RenderDrawData(ImGuiNative.igGetDrawData(), clear, size.X, size.Y);
         }
         
-        public unsafe static void RenderDrawData(DrawData* drawData, int displayW, int displayH) {
+        public unsafe static void RenderDrawData(DrawData* drawData, Action Clear, int displayW, int displayH) {
             // We are using the OpenGL fixed pipeline to make the example code simpler to read!
             // Setup render state: alpha-blending enabled, no face culling, no depth testing, scissor enabled, vertex/texcoord/color pointers.
-            System.Numerics.Vector4 clear_color = new System.Numerics.Vector4(114f / 255f, 144f / 255f, 154f / 255f, 1.0f);
             GL.Viewport(0, 0, displayW, displayH);
-            GL.ClearColor(clear_color.X, clear_color.Y, clear_color.Z, clear_color.W);
-            GL.Clear(ClearBufferMask.ColorBufferBit);
+            Clear ();
 
             int last_texture;
             GL.GetInteger(GetPName.TextureBinding2D, out last_texture);
@@ -161,12 +159,12 @@ namespace ImGuiOpenTK{
 
        
 
-                public static bool HandleEvent(TKEvent tKEvent) {
+        public static bool HandleEvent(TKEvent tKEvent) {
             IO io = ImGui.GetIO();
             switch (tKEvent.EventType)
             {
                 case TKEventType.Keyboard:
-                    var KeyboardEvent = tKEvent as KeyBoardEvent;
+                    var KeyboardEvent = tKEvent as KeyboardEvent;
                     switch (KeyboardEvent.Key) {
                         case Key.ControlLeft:
                         case Key.ControlRight:
@@ -206,18 +204,18 @@ namespace ImGuiOpenTK{
                     break;
                 case TKEventType.MouseMotion:
                     var MouseMotion = tKEvent as MouseMotionEvent;
-                    io.MousePosition = new System.Numerics.Vector2(MouseMotion.Position.X,MouseMotion.Position.Y);
+                    io.MousePosition = new System.Numerics.Vector2(MouseMotion.Position.X / io.DisplayFramebufferScale.X, MouseMotion.Position.Y / io.DisplayFramebufferScale.Y);
                     break;
                 case TKEventType.TextInput:
                     var TextEvent = tKEvent as TextInputEvent;
                     unsafe
                     {
-                        ImGuiNative.ImGuiIO_AddInputCharactersUTF8(TextEvent.Text);
+                        ImGuiNative.ImGuiIO_AddInputCharacter (TextEvent.Char);
                     }
                     break;
 
             }
-            
+
 
            /*switch (mouse.GetState) {
                 case SDL.SDL_EventType.SDL_MOUSEWHEEL:

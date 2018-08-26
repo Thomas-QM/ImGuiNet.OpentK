@@ -18,8 +18,6 @@ namespace ImGuiOpenTK
         protected readonly bool _IsSuperClass;
 
         protected double g_Time = 0.0f;
-        protected readonly bool[] g_MousePressed = { false, false, false };
-        protected float g_MouseWheel = 0.0f;
         protected int g_FontTexture = 0;
 
         public System.Numerics.Vector2 Position {
@@ -59,7 +57,7 @@ namespace ImGuiOpenTK
 
         public void ImGuiOnLoop(OpenTKWindow window)
         {
-            GL.ClearColor(0.1f, 0.125f, 0.15f, 1f);
+            GL.ClearColor(1f, 1f, 1f, 1f);
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
             ImGuiRender();
@@ -74,42 +72,66 @@ namespace ImGuiOpenTK
             base.Start();
         }
 
-        private unsafe void UpdateImGuiInput(IO io)
+        protected override void OnMouseWheel(MouseWheelEventArgs e)
         {
-            MouseState cursorState = Mouse.GetCursorState();
-            MouseState mouseState = Mouse.GetState();
+            OnEvent(this, new MouseWheelEvent (e.ValuePrecise));
+        }
 
+        protected override void OnMouseMove(MouseMoveEventArgs e)
+        {
             if (Focused)
             {
-                Point windowPoint = PointToClient(new Point(cursorState.X, cursorState.Y));
-                io.MousePosition = new System.Numerics.Vector2(windowPoint.X / io.DisplayFramebufferScale.X, windowPoint.Y / io.DisplayFramebufferScale.Y);
+                //Point windowPoint = PointToClient();
+                OnEvent (this, new MouseMotionEvent(new Point(e.X, e.Y)));
             }
             else
             {
-                io.MousePosition = new System.Numerics.Vector2(-1f, -1f);
+                OnEvent(this, new MouseMotionEvent(new Point (-1, -1)));
             }
+        }
 
-            io.MouseDown[0] = mouseState.LeftButton == ButtonState.Pressed;
-            io.MouseDown[1] = mouseState.RightButton == ButtonState.Pressed;
-            io.MouseDown[2] = mouseState.MiddleButton == ButtonState.Pressed;
+        protected override void OnMouseDown(MouseButtonEventArgs e)
+        {
+            OnEvent (this, new MouseButtonEvent (true, e.Button));
+        }
 
-            float newWheelPos = mouseState.WheelPrecise;
-            float delta = newWheelPos - g_MouseWheel;
-            g_MouseWheel = newWheelPos;
-            io.MouseWheel += delta;
+        protected override void OnMouseUp(MouseButtonEventArgs e)
+        {
+            OnEvent (this, new MouseButtonEvent (false, e.Button));
+        }
+
+        protected override void OnKeyDown(KeyboardKeyEventArgs e)
+        {
+            OnEvent (this, new KeyboardEvent (true, e.Key));
+        }
+
+        protected override void OnKeyUp(KeyboardKeyEventArgs e)
+        {
+            OnEvent (this, new KeyboardEvent (false, e.Key));
+        }
+
+        protected override void OnKeyPress(KeyPressEventArgs e)
+        {
+            OnEvent (this, new TextInputEvent (e.KeyChar));
         }
 
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
             OpenTK.Graphics.OpenGL.GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.ColorBufferBit);
             base.OnUpdateFrame(e);
-            UpdateImGuiInput(ImGui.GetIO());
-            ImGuiRender();            
+            ImGuiRender();
         }
 
         protected override void OnRenderFrame(FrameEventArgs e)
-        {            
+        {
             Swap();
+        }
+
+        public virtual void ClearGL ()
+        {
+            var color = new System.Numerics.Vector4 (1.0f, 1.0f, 1.0f, 1.0f);
+            GL.ClearColor(color.X, color.Y, color.Z, color.W);
+            GL.Clear(ClearBufferMask.ColorBufferBit);
         }
 
         public virtual void ImGuiRender() {
@@ -118,7 +140,7 @@ namespace ImGuiOpenTK
 
             ImGuiLayout();
 
-            ImGuiOpenTKHelper.Render(Size);
+            ImGuiOpenTKHelper.Render(Size, ClearGL);
         }
 
         public virtual void ImGuiLayout() {

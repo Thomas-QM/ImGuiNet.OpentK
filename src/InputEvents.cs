@@ -40,11 +40,11 @@ namespace ImGuiOpenTK
 
     }
 
-    public class KeyBoardEvent : TKEvent
+    public class KeyboardEvent : TKEvent
     {
         public  bool IsKeyDown { get; private set; }
         public OpenTK.Input.Key Key { get; private set; }
-        public KeyBoardEvent(bool IsKeyDown, OpenTK.Input.Key Key)
+        public KeyboardEvent(bool IsKeyDown, OpenTK.Input.Key Key)
         {
             EventType = Type.Keyboard;
             this.IsKeyDown = IsKeyDown;
@@ -86,11 +86,11 @@ namespace ImGuiOpenTK
 
     public class TextInputEvent : TKEvent
     {
-        public string Text { get; private set; }
-        public TextInputEvent(string Text)
+        public char Char { get; private set; }
+        public TextInputEvent(char Char)
         {
             EventType = Type.TextInput;
-            this.Text = Text;
+            this.Char = Char;
         }
     }
 }
